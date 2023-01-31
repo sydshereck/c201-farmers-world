@@ -1,0 +1,78 @@
+% The state of river bank = state(Farmer, Fox, Goose, Grain) showing the location of 
+% the Farmer, Fox, Goose, and Grain
+
+% Possible locations = east and west
+
+% action(State, Action, NewState): it is possible to take Action in State, and this produces NewState.
+
+% Farmer crossing alone: 
+% Boat crosses the river in the east direction with the farmer in the boat 
+action(state(west,Pos1, Pos2, Pos3), 
+       farmer_cross_east, 
+       state(east,Pos1,Pos2, Pos3)).
+% Boat crosses the river in the west direction with the farmer in the boat 
+action(state(east,Pos1, Pos2, Pos3), 
+       farmer_cross_west, 
+       state(west,Pos1,Pos2, Pos3)).
+
+% Farmer bringing fox across: 
+% Boat crosses the river in the east direction with the farmer and fox in the boat 
+action(state(west,west, Pos1, Pos2), 
+       bring_fox_east, 
+       state(east,east,Pos1, Pos2)).
+% Boat crosses the river in the west direction with the farmer and fox in the boat 
+action(state(east,east, Pos1, Pos2), 
+       bring_fox_west, 
+       state(west,west,Pos1, Pos2)).
+
+% Farmer bringing goose across: 
+% Boat crosses the river in the east direction with the farmer and goose in the boat 
+action(state(west,Pos1, west, Pos2), 
+       bring_goose_east, 
+       state(east,Pos1,east, Pos2)).
+% Boat crosses the river in the west direction with the farmer and goose in the boat 
+action(state(east,Pos1, east, Pos2), 
+       bring_goose_west, 
+       state(west,Pos1,west, Pos2)).
+
+% Farmer bringing grain across: 
+% Boat crosses the river in the east direction with the farmer and grain in the boat 
+action(state(west,Pos1, Pos2, west), 
+       bring_grain_east, 
+       state(east,Pos1,Pos2, east)).
+% Boat crosses the river in the west direction with the farmer and grain in the boat 
+action(state(east,Pos1, Pos2, east), 
+       bring_grain_west, 
+       state(west,Pos1,Pos2, west)).
+
+% Restrictions based on constraints of what the puzzle allows and does not allow
+% illegal(state) will be true if the state is not allowed
+
+% Fox and Goose cannot be alone without farmer (location of Grain is irrelevant)
+illegal(state(Pos1, Pos2, Pos2, _)) :- Pos1\==Pos2.
+% Goose and Grain cannot be alone without farmer (location of Fox is irrelevant)
+illegal(state(Pos1, _, Pos2, Pos2)) :- Pos1\==Pos2.
+
+
+% plan(StartState,GoalState,Visited,Plan) is true if Plan is a list of actions that
+% will successfully lead from StartState to GoalState. Visited is in place to avoid stack overflow.
+plan(State,State,_,[]).
+plan(State1,GoalState,Visited,[Action1|RestOfPlan]) :-
+    action(State1, Action1, State2),
+    not(illegal(State2)),
+    not(member(State2, Visited)),
+    plan(State2, GoalState,[State2|Visited], RestOfPlan).
+
+%bfirst_plan doees a breadth-first search for plans meeting farmer World's
+%standard initial state and goal state, investigating the shortest paths first.
+bfirst_plan(Plan) :-
+    append(Plan,_,_),
+    plan(state(west,west,west, west),state(east,east,east,east), [], Plan).
+
+% to query:
+% ? - bfirst_plan(Plan).
+
+
+
+
+
